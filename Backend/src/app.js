@@ -11,7 +11,7 @@ app.use(cookieParser());
 const allowedOrigins = [
   "http://localhost:5173",
   "http://localhost:5174",
-  "https://interview-ai-yt-main-gamma.vercel.app/" // 👈 BUS YAHAN APNA VERCEL FRONTEND URL DAAL DENA!
+  "https://interview-ai-yt-main-gamma.vercel.app/" // 👈 YAHAN APNA VERCEL FRONTEND URL DAAL DENA!
 ];
 
 app.use(cors({
@@ -28,5 +28,20 @@ app.use(cors({
     credentials: true
 }));
 
-// Base root check karne ke liye test route (taaki 404 na aaye direct domain par)
-app.get("/",
+// Base root check karne ke liye test route (SABHI BRACKETS CLOSED PROPERLY 💥)
+app.get("/", (req, res) => {
+    return res.status(200).json({
+        message: "AI Job Prep Backend is running successfully! 🚀",
+        status: "Healthy"
+    });
+});
+
+/* Require all the routes here */
+const authRouter = require("./routes/auth.routes");
+const interviewRouter = require("./routes/interview.routes");
+
+/* Using all the routes here */
+app.use("/api/auth", authRouter);
+app.use("/api/interview", interviewRouter);
+
+module.exports = app;
