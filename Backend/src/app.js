@@ -7,28 +7,31 @@ const app = express();
 app.use(express.json());
 app.use(cookieParser());
 
-// 🌟 CORS CONFIGURATION: Localhost aur aapka Deployed Vercel URL dono allow honge
+// 🌟 DYNAMIC PRODUCTION CORS CONFIGURATION
 const allowedOrigins = [
   "http://localhost:5173",
   "http://localhost:5174",
-  "https://interview-ai-yt-main-gamma.vercel.app/" // 👈 YAHAN APNA VERCEL FRONTEND URL DAAL DENA!
+  "https://interview-ai-yt-main-69kwqt2yv-vinayak-bhawsars-projects.vercel.app" // Aapka exact Vercel url
 ];
 
 app.use(cors({
     origin: function (origin, callback) {
-        // Allow requests with no origin (like Postman, mobile apps or server-to-server)
+        // Allow requests with no origin (like Postman or server-to-server)
         if (!origin) return callback(null, true);
         
-        if (allowedOrigins.indexOf(origin) === -1) {
-            const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
-            return callback(new Error(msg), false);
+        // Agar dynamic branch/preview URL ho toh vercel.app check kar lega, ya exact match check karega
+        if (allowedOrigins.indexOf(origin) !== -1 || origin.endsWith(".vercel.app")) {
+            return callback(null, true);
+        } else {
+            return callback(new Error('CORS Policy Blocked this origin'), false);
         }
-        return callback(null, true);
     },
-    credentials: true
+    credentials: true, // Yeh 'true' header bhejna compulsory hai cookies ke liye
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization", "Cookie"]
 }));
 
-// Base root check karne ke liye test route (SABHI BRACKETS CLOSED PROPERLY 💥)
+// Base root check karne ke liye test route
 app.get("/", (req, res) => {
     return res.status(200).json({
         message: "AI Job Prep Backend is running successfully! 🚀",
