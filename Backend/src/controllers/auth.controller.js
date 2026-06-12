@@ -36,13 +36,14 @@ async function registerUserController(req, res) {
             password: hash
         });
 
+        const jwtSecret = process.env.JWT_SECRET || "AI_JOB_PREP_SUPER_SECURE_PRODUCTION_FALLBACK_KEY_123456789";
         const token = jwt.sign(
             { id: user._id, username: user.username },
-            process.env.JWT_SECRET,
+            jwtSecret,
             { expiresIn: "1d" }
         );
 
-        // 🌟 FIX: Production cookie settings cross-domain cookies allow karne ke liye
+        // Production cookie settings cross-domain cookies allow karne ke liye
         res.cookie("token", token, {
             httpOnly: true,
             secure: true,      // Compulsory for HTTPS (Vercel/Render)
@@ -50,8 +51,10 @@ async function registerUserController(req, res) {
             maxAge: 24 * 60 * 60 * 1000 // 1 Day
         });
 
+        // 🌟 FIX: Frontend ke liye explicit token property return ki hai
         return res.status(201).json({
             message: "User registered successfully",
+            token, 
             user: {
                 id: user._id,
                 username: user.username,
@@ -89,22 +92,24 @@ async function loginUserController(req, res) {
             });
         }
 
+        const jwtSecret = process.env.JWT_SECRET || "AI_JOB_PREP_SUPER_SECURE_PRODUCTION_FALLBACK_KEY_123456789";
         const token = jwt.sign(
             { id: user._id, username: user.username },
-            process.env.JWT_SECRET,
+            jwtSecret,
             { expiresIn: "1d" }
         );
 
-        // 🌟 FIX: Production cookie settings cross-domain cookies allow karne ke liye
         res.cookie("token", token, {
             httpOnly: true,
-            secure: true,      // Compulsory for HTTPS (Vercel/Render)
-            sameSite: "none",  // Compulsory for Cross-Site Cookie Sharing
-            maxAge: 24 * 60 * 60 * 1000 // 1 Day
+            secure: true,      
+            sameSite: "none",  
+            maxAge: 24 * 60 * 60 * 1000 
         });
 
+        // 🌟 FIX: Frontend ke liye explicit token property return ki hai
         return res.status(200).json({
             message: "User loggedIn successfully.",
+            token,
             user: {
                 id: user._id,
                 username: user.username,
@@ -124,13 +129,13 @@ async function loginUserController(req, res) {
  */
 async function logoutUserController(req, res) {
     try {
-        const token = req.cookies.token;
+        // Bearer token syntax fallback handler for custom context calls
+        const token = req.cookies.token || (req.headers.authorization && req.headers.authorization.split(" ")[1]);
 
         if (token) {
             await tokenBlacklistModel.create({ token });
         }
 
-        // 🌟 FIX: Cookie clear karte waqt bhi same production parameters dena sahi rehta hai
         res.clearCookie("token", {
             httpOnly: true,
             secure: true,
